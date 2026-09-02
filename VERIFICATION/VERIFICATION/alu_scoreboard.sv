@@ -942,17 +942,8 @@ class alu_scoreboard extends uvm_scoreboard;
   bit exp_e3;
   bit exp_err3;
 
-
-  // Set by arithmetic_operation()/logical_operation() so capture_operands()
-  // knows whether this transaction produced a new result to shift into the
-  // pipeline. Must be a class member (not a task-local bit) so the single
-  // shift block in capture_operands() can see it.
   bit last_consumed;
-
-  // Multiply is genuinely multi-cycle (partial products accumulated across
-  // two separate commands, cmd 9 then cmd 10), so it still needs to hold
-  // operands across transactions -- everything else below computes
-  // straight from the current transaction's op1/op2, no held-over temps.
+  
   bit[`DW-1:0] mul_temp1;
   bit[`DW-1:0] mul_temp2;
 
@@ -975,11 +966,11 @@ class alu_scoreboard extends uvm_scoreboard;
   endfunction
 
   task reset_reference_model();
-    exp_res = '0;     exp_cout = '0;    exp_oflow = '0;
-    exp_g = '0;       exp_e = '0;       exp_l = '0;       exp_err = '0;
+    exp_res = '0; exp_cout = '0;exp_oflow = '0;
+    exp_g = '0; exp_e = '0;exp_l = '0;exp_err = '0;
 
-    exp_res2 = '0;    exp_cout2 = '0;   exp_oflow2 = '0;
-    exp_g2 = '0;      exp_e2 = '0;      exp_l2 = '0;      exp_err2 = '0;
+    exp_res2 = '0;exp_cout2 = '0; exp_oflow2 = '0;
+    exp_g2 = '0;exp_e2 = '0;exp_l2 = '0;exp_err2 = '0;
 
 	  exp_res3 = '0; exp_res4=0;   exp_cout3 = '0;   exp_oflow3 = '0;
     exp_g3 = '0;      exp_e3 = '0;      exp_l3 = '0;      exp_err3 = '0;
@@ -1059,10 +1050,10 @@ class alu_scoreboard extends uvm_scoreboard;
 	exp_res4=exp_res3;      exp_res3   = exp_res2;   exp_res2   = exp_res;
 	    exp_cout4=exp_cout3;exp_cout3  = exp_cout2;  exp_cout2  = exp_cout;
       exp_oflow3 = exp_oflow2; exp_oflow2 = exp_oflow;
-      exp_g3     = exp_g2;     exp_g2     = exp_g;
-      exp_e3     = exp_e2;     exp_e2     = exp_e;
-      exp_l3     = exp_l2;     exp_l2     = exp_l;
-      exp_err3   = exp_err2;   exp_err2   = exp_err;
+      exp_g3 = exp_g2;     exp_g2 = exp_g;
+      exp_e3  = exp_e2;     exp_e2 = exp_e;
+      exp_l3  = exp_l2;     exp_l2 = exp_l;
+      exp_err3 = exp_err2;   exp_err2 = exp_err;
     end
   endtask
 
@@ -1327,27 +1318,7 @@ class alu_scoreboard extends uvm_scoreboard;
   bit mode;
   bit cin;
   bit [`CW-1:0] cmd;
-
-  // ------------------------------------------------------------------
-  // Pipeline stages for every output field. Stage 0 (no suffix) is the
-  // value computed THIS transaction. Stage 1 (_2) / Stage 2 (_3) are
-  // delayed copies representing the DUT's output latency.
-  //
-  // IMPORTANT: all seven fields (res, cout, oflow, g, e, l, err) share
-  // ONE pipeline that advances exactly once per consumed transaction,
-  // regardless of which command executed. A command only overwrites the
-  // stage-0 field(s) it's actually responsible for (e.g. CMP only
-  // touches g/e/l, ADD only touches res/cout) -- fields a command
-  // doesn't touch simply carry their previous stage-0 value forward,
-  // same as an idle pipeline register would in real hardware. This is
-  // what keeps RES and G/E/L in lockstep with the real transaction
-  // count when command types are mixed; previously each field's shift
-  // only fired on the specific commands that used it, so mixing (e.g.
-  // ADD then CMP then ADD) caused RES's "N transactions ago" bookkeeping
-  // to drift out of sync with G/E/L's, producing failures that only
-  // showed up once command types were mixed together.
-  // ------------------------------------------------------------------
-
+	
   bit[`DW*2-1:0] exp_res;
   bit exp_cout;
   bit exp_oflow;
@@ -1372,17 +1343,7 @@ class alu_scoreboard extends uvm_scoreboard;
   bit exp_l3;
   bit exp_e3;
   bit exp_err3;
-
-  // Set by arithmetic_operation()/logical_operation() so capture_operands()
-  // knows whether this transaction produced a new result to shift into the
-  // pipeline. Must be a class member (not a task-local bit) so the single
-  // shift block in capture_operands() can see it.
   bit last_consumed;
-
-  // Multiply is genuinely multi-cycle (partial products accumulated across
-  // two separate commands, cmd 9 then cmd 10), so it still needs to hold
-  // operands across transactions -- everything else below computes
-  // straight from the current transaction's op1/op2, no held-over temps.
   bit[`DW-1:0] mul_temp1;
   bit[`DW-1:0] mul_temp2;
 
@@ -1406,14 +1367,14 @@ class alu_scoreboard extends uvm_scoreboard;
   endfunction
 
   task reset_reference_model();
-    exp_res = '0;     exp_cout = '0;    exp_oflow = '0;
-    exp_g = '0;       exp_e = '0;       exp_l = '0;       exp_err = '0;
+    exp_res = '0; exp_cout = '0; exp_oflow = '0;
+    exp_g = '0;  exp_e = '0; exp_l = '0; exp_err = '0;
 
-    exp_res2 = '0;    exp_cout2 = '0;   exp_oflow2 = '0;
-    exp_g2 = '0;      exp_e2 = '0;      exp_l2 = '0;      exp_err2 = '0;
+    exp_res2 = '0; exp_cout2 = '0; exp_oflow2 = '0;
+    exp_g2 = '0; exp_e2 = '0;  exp_l2 = '0; exp_err2 = '0;
 
-    exp_res3 = '0;    exp_cout3 = '0;   exp_oflow3 = '0;
-    exp_g3 = '0;      exp_e3 = '0;      exp_l3 = '0;      exp_err3 = '0;
+    exp_res3 = '0;exp_cout3 = '0;  exp_oflow3 = '0;
+    exp_g3 = '0;exp_e3 = '0; exp_l3 = '0;exp_err3 = '0;
 	  exp_res4='0; exp_g4='0;
 
     op1 = '0;
@@ -1520,8 +1481,6 @@ class alu_scoreboard extends uvm_scoreboard;
         4'd1: begin // SUB
           if ((op1_valid && op2_valid) || both_valid) begin
             exp_res = op1 - op2;
-            // DUT's "oflow" for subtraction is an unsigned borrow flag:
-            // it goes high whenever op1 < op2.
             exp_oflow = (op1 < op2);
             consumed = 1'b1;
           end
